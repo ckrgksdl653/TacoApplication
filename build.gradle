@@ -1,0 +1,84 @@
+plugins {
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'java'
+    id 'maven-publish'
+}
+
+group 'com.tmax.openframe'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'war'
+
+ext {
+    manifest_attributes = [
+            'Implementation-Title': 'COBOL to Java template project',
+            'Built-By': System.properties['user.name'],
+            'Build-Timestamp': new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()),
+            'Build-Version': "${version}",
+            'Created-By': "Gradle ${gradle.gradleVersion}",
+            'Build-Jdk': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+            'Build-OS': "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+    ]
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+compileJava.options.encoding = "UTF-8"
+compileTestJava.options.encoding = "UTF-8"
+
+repositories {
+    mavenCentral()
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes manifest_attributes
+    }
+    from { (configurations.compile).collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+    }
+    destinationDir file("$buildDir")
+    archiveBaseName.set("${rootProject.name}")
+    archiveVersion.set("${version}")
+    archiveExtension.set("jar")
+    with jar
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:1.3.5.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-web:2.1.7.RELEASE'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springframework.kafka:spring-kafka'
+    compileOnly('org.apache.commons:commons-lang3:3.5')
+    compileOnly('ch.obermuhlner:big-math:2.3.0')
+    compileOnly('org.projectlombok:lombok:1.18.10')
+
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.3.1.Final"
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.10'
+
+    // 임시 의존도
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.1.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.1.0'
+
+    //임시 의존도 - runtime 라이브러리만 참조하므로 추후 제거 필요한 의존도
+    implementation 'com.querydsl:querydsl-jpa:4.2.1' // querydsl의 버전은 spring 버전에 의존함. spring 2.2의 경우 4.2.1
+    annotationProcessor(
+            "com.querydsl:querydsl-apt:4.2.1:jpa"
+    )
+}
+
+bootWar {
+    archiveBaseName = "PROJECT-TEST"
+    archiveFileName = "PROJECT-TEST.war"
+}
+
+jar {
+
+}
+
